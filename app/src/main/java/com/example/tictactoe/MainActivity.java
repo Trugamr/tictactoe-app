@@ -5,6 +5,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+
+import androidx.dynamicanimation.animation.DynamicAnimation;
+import androidx.dynamicanimation.animation.SpringAnimation;
+import androidx.dynamicanimation.animation.SpringForce;
 import androidx.gridlayout.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -47,11 +51,15 @@ public class MainActivity extends AppCompatActivity {
         int winningPlayer = checkForWinner()[0];
         int winningLinePosition = checkForWinner()[1];
 
+        counter.setAlpha(0f);
+
         if(playerActive == 1) {
             counter.setImageResource(R.drawable.cross);
+            spawnAnimation(counter);
             playerActive = 2;
         } else {
             counter.setImageResource(R.drawable.circle);
+            spawnAnimation(counter);
             playerActive = 1;
         }
 
@@ -86,7 +94,12 @@ public class MainActivity extends AppCompatActivity {
 
     public void showWinningLine(int patternNumber) {
         Log.i("XD", "" + patternNumber + winningLinePositions[patternNumber][0]);
-        winningLine.setImageAlpha(200);
+        SpringAnimation alphaUp = new SpringAnimation(winningLine, DynamicAnimation.ALPHA, 1f);
+        alphaUp.start();
+        winningLine.setScaleY(0f);
+        SpringAnimation scaleY = new SpringAnimation(winningLine, DynamicAnimation.SCALE_Y, 1.2f);
+        scaleY.getSpring().setStiffness(SpringForce.STIFFNESS_VERY_LOW).setDampingRatio(SpringForce.DAMPING_RATIO_MEDIUM_BOUNCY);
+        scaleY.start();
         winningLine.setTranslationX(winningLinePositions[patternNumber][0]);
         winningLine.setTranslationY(winningLinePositions[patternNumber][1]);
         winningLine.setRotation(winningLinePositions[patternNumber][2]);
@@ -116,8 +129,32 @@ public class MainActivity extends AppCompatActivity {
             counter.setImageDrawable(null);
         }
         ((TextView) findViewById(R.id.statusTextView)).setText("Reset Done");
-        winningLine.setImageAlpha(0);
+        winningLine.setAlpha(0f);
         Log.i("XD", "Game Reset");
+    }
+
+    public void spawnAnimation(View v) {
+        SpringAnimation alphaIn = new SpringAnimation(v, DynamicAnimation.ALPHA, 1f);
+        alphaIn.getSpring().setStiffness(SpringForce.STIFFNESS_LOW).setDampingRatio(SpringForce.DAMPING_RATIO_NO_BOUNCY);
+        alphaIn.start();
+
+        SpringAnimation scaleDownX = new SpringAnimation(v, DynamicAnimation.SCALE_X, 0.5f);
+        SpringAnimation scaleDownY = new SpringAnimation(v, DynamicAnimation.SCALE_Y, 0.5f);
+        scaleDownX.getSpring().setStiffness(SpringForce.STIFFNESS_MEDIUM).setDampingRatio(SpringForce.DAMPING_RATIO_NO_BOUNCY);
+        scaleDownY.getSpring().setStiffness(SpringForce.STIFFNESS_MEDIUM).setDampingRatio(SpringForce.DAMPING_RATIO_NO_BOUNCY);
+        scaleDownX.start();
+        scaleDownY.start();
+
+        final SpringAnimation scaleUpX = new SpringAnimation(v, DynamicAnimation.SCALE_X, 1f);
+        final SpringAnimation scaleUpY = new SpringAnimation(v, DynamicAnimation.SCALE_Y, 1f);
+
+        scaleDownX.addEndListener(new DynamicAnimation.OnAnimationEndListener() {
+            @Override
+            public void onAnimationEnd(DynamicAnimation animation, boolean canceled, float value, float velocity) {
+                scaleUpX.start();
+                scaleUpY.start();
+            }
+        });
     }
 
     @Override
@@ -126,6 +163,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         winningLine = findViewById(R.id.winningLine);
-        winningLine.setImageAlpha(0);
+        winningLine.setScaleX(1.4f);
+        winningLine.setAlpha(0f);
     }
 }
